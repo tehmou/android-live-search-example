@@ -6,8 +6,13 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.jakewharton.rxbinding2.widget.RxTextView;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
 
 public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> arrayAdapter;
@@ -22,6 +27,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(arrayAdapter);
 
         EditText editText = (EditText) findViewById(R.id.edit_text);
+        RxTextView.textChanges(editText)
+                .doOnNext(text -> this.clearSearchResults())
+                .filter(text -> text.length() >= 3)
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::updateSearchResults);
     }
 
     private void clearSearchResults() {
